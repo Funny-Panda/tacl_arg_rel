@@ -2,6 +2,7 @@ from csv_utils import *
 from models_sup_blend import *
 from time import strftime, time
 import random
+import scipy
 import logging
 import re
 import os

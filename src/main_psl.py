@@ -6,19 +6,19 @@ from time import time
 from itertools import product
 from collections import defaultdict
 import argparse
-
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 cfg = {
     "predicates": [],
     "data_dir": None,
     "data_prefix": None,
-    "classes": None, 
-    "pair_delimiter": None, 
-    "modes": None, 
-    "default_class": None, 
+    "classes": None,
+    "pair_delimiter": None,
+    "modes": None,
+    "default_class": None,
     "default_wt": 0.2,
     "default_trans_wt": 0.5,
 }
-
 pred2info = {
     # feat_file_suffix, n_args, rule
     # Normarg
@@ -97,7 +97,6 @@ pred2info = {
     "normarg_situ_2_0": ("normarg", 2, "1: normarg_situ_2_0(P, C) -> relation(P, C, 'sup') ^2"),
     "normarg_situ_2_1": ("normarg", 2, "1: normarg_situ_2_1(P, C) -> relation(P, C, 'att') ^2"),
 
-
     # NLI
     "nli_20K_ent": ("nli", 2, "1: nli_20k_ent(P, C) -> relation(P, C, 'sup') ^2"),
     "nli_20K_con": ("nli", 2, "1: nli_20k_con(P, C) -> relation(P, C, 'att') ^2"),
@@ -147,7 +146,6 @@ pred2info = {
 }
 
 
-
 def build_data(out_dir):
     cfg["basic_rules"] = [
         f"{cfg['default_wt']}: relation(P, C, '{cfg['default_class']}') = 1 ^2",
@@ -161,7 +159,6 @@ def build_data(out_dir):
             f"{cfg['default_trans_wt']}: transitivity(P,C) & relation(P,Q,'att') & relation(Q,C,'sup') -> relation(P,C,'att') ^2",
         ])
 
-
     with open(f'{out_dir}/cfg.json', "w") as f:
         f.write(json.dumps(cfg, default=lambda o: str(type(o))))
 
@@ -174,7 +171,7 @@ def build_data(out_dir):
         n_train = 0
         for row in iter_csv_header(f"{data_dir}/{data_prefix}-{mode}-split.csv"):
             if row["split"] == "train":
-                split = "ssv" 
+                split = "ssv"
                 n_train += 1
             else:
                 split = row["split"]
@@ -203,7 +200,6 @@ def build_data(out_dir):
             if "trans" in cfg["modes"]:
                 f.write('  transitivity/2 : closed\n')
 
-
             f.write("\nobservations:\n")
             for pred in cfg["predicates"]:
                 f.write(f'  {pred} : {pred}_obs.txt\n')
@@ -216,7 +212,6 @@ def build_data(out_dir):
 
             f.write("\ntruth:\n")
             f.write(f'  relation : relation_truth.txt\n')
-
 
     # Data
     pair2label = {}
@@ -278,7 +273,7 @@ def build_data(out_dir):
                     label = pair2label[pairid]
                     for cls in cfg["classes"]:
                         if suffix in ["truth", "obs"]:
-                            f.write(f'{arg1}\t{arg2}\t{cls}\t{int(cls==label)}\n')
+                            f.write(f'{arg1}\t{arg2}\t{cls}\t{int(cls == label)}\n')
                         else:
                             f.write(f'{arg1}\t{arg2}\t{cls}\n')
 
@@ -287,7 +282,7 @@ def abbr(name):
     tokens = name.split("_")
     if name.startswith("nli") or name.startswith("causal") or name.startswith("abduct"):
         res = tokens[0][:2] + "".join([t[0] for t in tokens[1:-1]]) + \
-                tokens[-1][0]
+              tokens[-1][0]
     elif name.startswith("sa_conf"):
         res = "sc" + tokens[-1]
     elif name.startswith("sa_cons"):
@@ -303,10 +298,10 @@ def abbr(name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-dataset", choices=["kialo", "debate"], 
+    parser.add_argument("-dataset", choices=["kialo", "debate"],
                         required=True,
                         help="Dataset.")
-    parser.add_argument("-dtype", choices=["normative", "causal"], 
+    parser.add_argument("-dtype", choices=["normative", "causal"],
                         required=True,
                         help="Argument type (causal=non-normative).")
     parser.add_argument("-trans", action="store_true",
@@ -329,20 +324,20 @@ if __name__ == "__main__":
         default_class_comb = ["neu"]
 
         nli_preds_comb = [
-            ["nli_50K_ent", "nli_50K_con"], 
+            ["nli_50K_ent", "nli_50K_con"],
         ]
         ie_conf_preds_comb = [
-            ["ie_conf_any"], 
+            ["ie_conf_any"],
         ]
         sa_conf_preds_comb = [
             ["sa_conf_npvp", "sa_cons_npvp"],
         ]
         causal_preds_comb = [
             ["causal_3_cause", "causal_3_obstruct",
-             "abduct_3_cause", "abduct_3_obstruct"], 
+             "abduct_3_cause", "abduct_3_obstruct"],
         ]
         normarg_preds_comb = [
-            ["normarg_nneu2_4_0", "normarg_nneu2_4_1", 
+            ["normarg_nneu2_4_0", "normarg_nneu2_4_1",
              "normarg_nneu2_4_2", "normarg_nneu2_4_3"],
         ]
 
@@ -352,39 +347,38 @@ if __name__ == "__main__":
         cfg["pair_delimiter"] = "#"
         cfg["modes"] = ["bi"]
         cfg["default_class"] = "neu"
-     
+
         default_wt_comb = [0.2, 0.3]
         default_class_comb = ["sup", "att"]
         default_trans_wt_comb = [None]  # Debate
 
         nli_preds_comb = [
-            ["nli_50K_ent", "nli_50K_con"], 
+            ["nli_50K_ent", "nli_50K_con"],
         ]
         ie_conf_preds_comb = [
-            ["ie_conf_any"], 
+            ["ie_conf_any"],
         ]
         sa_conf_preds_comb = [
             ["sa_conf_npvp", "sa_cons_npvp"],
         ]
         causal_preds_comb = [
             ["causal_3_cause", "causal_3_obstruct",
-             "abduct_3_cause", "abduct_3_obstruct"], 
+             "abduct_3_cause", "abduct_3_obstruct"],
         ]
         normarg_preds_comb = [
-            ["normarg_nneu2_4_0", "normarg_nneu2_4_1", 
+            ["normarg_nneu2_4_0", "normarg_nneu2_4_1",
              "normarg_nneu2_4_2", "normarg_nneu2_4_3"],
         ]
-
 
     very_start_time = time()
 
     out_dir_set = set()
     for f, (cfg["default_wt"], cfg["default_trans_wt"], cfg["default_class"],
-            nli_preds, ie_conf_preds, sa_conf_preds, 
+            nli_preds, ie_conf_preds, sa_conf_preds,
             causal_preds, normarg_preds) \
             in enumerate(product(default_wt_comb, default_trans_wt_comb,
                                  default_class_comb,
-                                 nli_preds_comb, 
+                                 nli_preds_comb,
                                  ie_conf_preds_comb, sa_conf_preds_comb,
                                  causal_preds_comb, normarg_preds_comb)):
 
@@ -397,11 +391,11 @@ if __name__ == "__main__":
                   f'{cfg["data_prefix"]}-NC{len(cfg["classes"])}' + \
                   f'-DC{cfg["default_class"]}' + \
                   f'-PD' + "+".join(sorted(set(
-                      [abbr(p) for p in cfg["predicates"]]))) + \
+            [abbr(p) for p in cfg["predicates"]]))) + \
                   f'-WT{cfg["default_wt"]}' + \
                   (f'-TR{cfg["default_trans_wt"]}' if "trans" in cfg["modes"] else '')
 
-        #if os.path.exists(out_dir): continue
+        # if os.path.exists(out_dir): continue
         assert out_dir not in out_dir_set
         out_dir_set.add(out_dir)
 
@@ -418,7 +412,6 @@ if __name__ == "__main__":
             print(cmd)
             os.system(cmd)
 
-        print("Time: {:.1f}m".format((time() - start_time)/60))
+        print("Time: {:.1f}m".format((time() - start_time) / 60))
 
-    print("Total Time: {:.1f}m".format((time() - very_start_time)/60))
-
+    print("Total Time: {:.1f}m".format((time() - very_start_time) / 60))
